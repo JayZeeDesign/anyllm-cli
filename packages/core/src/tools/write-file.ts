@@ -112,10 +112,27 @@ export class WriteFileTool
       return 'Parameters failed schema validation.';
     }
     const filePath = params.file_path;
+    
+    // Debug logging
+    console.log('[WriteFileTool] Debug - validateToolParams:', {
+      file_path: params.file_path,
+      isAbsolute: path.isAbsolute(filePath),
+      targetDir: this.config.getTargetDir(),
+      normalizedPath: path.normalize(filePath),
+      resolvedPath: path.resolve(filePath)
+    });
+    
     if (!path.isAbsolute(filePath)) {
+      console.log('[WriteFileTool] Error - Path is not absolute:', filePath);
       return `File path must be absolute: ${filePath}`;
     }
     if (!this.isWithinRoot(filePath)) {
+      console.log('[WriteFileTool] Error - Path is not within root:', {
+        filePath,
+        targetDir: this.config.getTargetDir(),
+        normalizedPath: path.normalize(filePath),
+        normalizedRoot: path.normalize(this.config.getTargetDir())
+      });
       return `File path must be within the root directory (${this.config.getTargetDir()}): ${filePath}`;
     }
 

@@ -109,6 +109,7 @@ export async function createContentGeneratorConfig(
 
 export async function createContentGenerator(
   config: ContentGeneratorConfig,
+  geminiConfig?: any,
 ): Promise<ContentGenerator> {
   const version = process.env.CLI_VERSION || process.version;
   const httpOptions = {
@@ -135,7 +136,7 @@ export async function createContentGenerator(
 
   if (config.authType === AuthType.USE_CLAUDE) {
     const { createAISDKContentGenerator } = await import('./aiSDKContentGenerator.js');
-    return createAISDKContentGenerator(config);
+    return createAISDKContentGenerator(config, geminiConfig);
   }
 
   throw new Error(

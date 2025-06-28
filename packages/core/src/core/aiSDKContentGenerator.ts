@@ -21,27 +21,40 @@ import {
 import { generateText, tool } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+// Removed unused imports since we're not executing tools directly
+import { Config } from '../config/config.js';
+import { ToolRegistry } from '../tools/tool-registry.js';
 
 /**
  * AI SDK-based ContentGenerator for Claude with tool calling support
  * Implements the ContentGenerator interface using Vercel AI SDK
  */
 export class AISDKContentGenerator implements ContentGenerator {
-  constructor(private config: ContentGeneratorConfig) {}
+  private config?: Config;
+  private toolRegistry?: ToolRegistry;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(config: ContentGeneratorConfig, geminiConfig?: Config) {
+    this.config = geminiConfig;
+  }
+
+  private async getToolRegistry(): Promise<ToolRegistry | undefined> {
+    return this.config?.getToolRegistry?.();
+  }
 
   async generateContent(request: GenerateContentParameters): Promise<GenerateContentResponse> {
     try {
       // Extract prompt from request (simplified approach)
       const prompt = this.extractPromptFromRequest(request);
-      const tools = this.convertToolsForAISDK(request.config?.tools);
+      const tools = await this.convertToolsForAISDK(request.config?.tools);
       
       console.log('Sending request to Claude with prompt and', Object.keys(tools).length, 'tools');
 
       const result = await generateText({
-        model: anthropic(this.config.model),
+        model: anthropic(this.config?.getModel?.() || 'claude-3-5-sonnet-20241022'),
         prompt,
         tools: Object.keys(tools).length > 0 ? tools : undefined,
-        maxSteps: 5, // Allow multi-step tool calling
+        maxSteps: 1, // Only allow one step at a time so CLI can handle tool execution
       });
 
       console.log('Claude response received');
@@ -59,15 +72,15 @@ export class AISDKContentGenerator implements ContentGenerator {
     try {
       // Extract prompt from request (simplified approach)
       const prompt = this.extractPromptFromRequest(request);
-      const tools = this.convertToolsForAISDK(request.config?.tools);
+      const tools = await this.convertToolsForAISDK(request.config?.tools);
       
       console.log('Sending streaming request to Claude with prompt and', Object.keys(tools).length, 'tools');
 
       const result = await generateText({
-        model: anthropic(this.config.model),
+        model: anthropic(this.config?.getModel?.() || 'claude-3-5-sonnet-20241022'),
         prompt,
         tools: Object.keys(tools).length > 0 ? tools : undefined,
-        maxSteps: 5, // Allow multi-step tool calling
+        maxSteps: 1, // Only allow one step at a time so CLI can handle tool execution
       });
 
       console.log('Claude streaming response received');
@@ -107,6 +120,7 @@ export class AISDKContentGenerator implements ContentGenerator {
   /**
    * Extract prompt text from Gemini request format
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private extractPromptFromRequest(request: GenerateContentParameters): string {
     if (!request.contents) {
       return '';
@@ -163,12 +177,15 @@ export class AISDKContentGenerator implements ContentGenerator {
   /**
    * Convert Gemini tools to AI SDK format
    */
-  private convertToolsForAISDK(geminiTools: any): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async convertToolsForAISDK(geminiTools: any): Promise<Record<string, any>> {
     const tools: Record<string, any> = {};
     
     if (!geminiTools || !Array.isArray(geminiTools)) {
       return tools;
     }
+    
+     // Note: toolRegistry not needed since we're not executing tools here
     
     for (const geminiTool of geminiTools) {
       if (!geminiTool.functionDeclarations) continue;
@@ -178,9 +195,16 @@ export class AISDKContentGenerator implements ContentGenerator {
           description: func.description || func.name,
           parameters: this.buildZodSchema(func.parameters),
           execute: async (args: Record<string, unknown>) => {
-            // Tool execution will be handled by the core system
-            // For now, return the args to indicate the tool was called
-            return { success: true, args };
+            // Debug logging
+            console.log(`[AISDKContentGenerator] Tool call requested: ${func.name} with args:`, args);
+            
+            // Don't actually execute the tool here - let the CLI handle it
+            // Just return a placeholder so the tool call gets included in the response
+                         return {
+               status: 'pending',
+               message: `Tool ${func.name} will be executed by CLI`,
+               args
+             };
           }
         });
       }
@@ -192,6 +216,7 @@ export class AISDKContentGenerator implements ContentGenerator {
   /**
    * Build Zod schema from Gemini function parameters
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private buildZodSchema(schema: any): z.ZodSchema {
     if (!schema || schema.type !== 'object') {
       return z.object({});
@@ -232,6 +257,7 @@ export class AISDKContentGenerator implements ContentGenerator {
   /**
    * Build Gemini response from AI SDK result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private buildGeminiResponse(result: any): GenerateContentResponse {
     const response = new GenerateContentResponse();
     const parts: Part[] = [];
@@ -288,8 +314,10 @@ export class AISDKContentGenerator implements ContentGenerator {
 /**
  * Factory function to create AI SDK ContentGenerator for Claude
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAISDKContentGenerator(
   config: ContentGeneratorConfig,
+  geminiConfig?: any,
 ): AISDKContentGenerator {
   if (!config.apiKey) {
     throw new Error('API key is required for Claude');
@@ -298,5 +326,5 @@ export function createAISDKContentGenerator(
   // Set API key for Anthropic SDK
   process.env.ANTHROPIC_API_KEY = config.apiKey;
   
-  return new AISDKContentGenerator(config);
+  return new AISDKContentGenerator(config, geminiConfig);
 } 
