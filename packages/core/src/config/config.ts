@@ -283,6 +283,16 @@ export class Config {
     }
   }
 
+  /**
+   * Updates the base model used for auth refreshes. This is used when switching
+   * auth types to ensure the correct model is used after refreshAuth recreates
+   * the contentGeneratorConfig.
+   */
+  updateBaseModel(newModel: string): void {
+    // @ts-expect-error - We need to modify the readonly model for auth switching
+    this.model = newModel;
+  }
+
   setFlashFallbackHandler(handler: FlashFallbackHandler): void {
     this.flashFallbackHandler = handler;
   }

@@ -25,7 +25,15 @@ export function tokenLimit(model: Model): TokenCount {
       return 1_048_576;
     case 'gemini-2.0-flash-preview-image-generation':
       return 32_000;
+    case 'claude-sonnet-4-20250514':
+    case 'claude-3-5-haiku-20241022':
+    case 'claude-3-opus-20240229':
+      return 200_000;
     default:
+      // Handle Claude models by prefix for future models
+      if (model.startsWith('claude')) {
+        return 200_000;
+      }
       return DEFAULT_TOKEN_LIMIT;
   }
 }

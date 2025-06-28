@@ -9,6 +9,7 @@ import { type Config, AuthType } from '@google/gemini-cli-core';
 import { GeminiPrivacyNotice } from './GeminiPrivacyNotice.js';
 import { CloudPaidPrivacyNotice } from './CloudPaidPrivacyNotice.js';
 import { CloudFreePrivacyNotice } from './CloudFreePrivacyNotice.js';
+import { ClaudePrivacyNotice } from './ClaudePrivacyNotice.js';
 
 interface PrivacyNoticeProps {
   onExit: () => void;
@@ -29,6 +30,8 @@ const PrivacyNoticeText = ({
       return <GeminiPrivacyNotice onExit={onExit} />;
     case AuthType.USE_VERTEX_AI:
       return <CloudPaidPrivacyNotice onExit={onExit} />;
+    case AuthType.USE_CLAUDE:
+      return <ClaudePrivacyNotice onExit={onExit} />;
     case AuthType.LOGIN_WITH_GOOGLE_PERSONAL:
     default:
       return <CloudFreePrivacyNotice config={config} onExit={onExit} />;

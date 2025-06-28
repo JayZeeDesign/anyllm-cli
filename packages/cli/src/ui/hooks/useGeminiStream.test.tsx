@@ -6,7 +6,22 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
+
+// Simple waitFor implementation using vitest utilities
+const waitFor = async (callback: () => void | boolean, timeout = 5000) => {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    try {
+      const result = callback();
+      if (result !== false) return;
+    } catch {
+      // Continue waiting
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  throw new Error('waitFor timeout');
+};
 import { useGeminiStream, mergePartListUnions } from './useGeminiStream.js';
 import { useInput } from 'ink';
 import {

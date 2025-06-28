@@ -33,6 +33,7 @@ import {
   sessionId,
   logUserPrompt,
   AuthType,
+  CLAUDE_MODELS,
 } from '@google/gemini-cli-core';
 import { validateAuthMethod } from './config/auth.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
@@ -101,14 +102,27 @@ export async function main() {
   const extensions = loadExtensions(workspaceRoot);
   const config = await loadCliConfig(settings.merged, extensions, sessionId);
 
-  // set default fallback to gemini api key
+  // set default fallback based on model and available API keys
   // this has to go after load cli because thats where the env is set
-  if (!settings.merged.selectedAuthType && process.env.GEMINI_API_KEY) {
+  const currentModel = config.getModel();
+  const isClaudeModel = Object.values(CLAUDE_MODELS).includes(currentModel);
+  
+  // If a Claude model is explicitly requested and we have the API key, use Claude auth
+  if (isClaudeModel && process.env.ANTHROPIC_API_KEY) {
     settings.setValue(
       SettingScope.User,
       'selectedAuthType',
-      AuthType.USE_GEMINI,
+      AuthType.USE_CLAUDE,
     );
+  } else if (!settings.merged.selectedAuthType) {
+    // Only set default auth if none is selected
+    if (process.env.GEMINI_API_KEY) {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.USE_GEMINI,
+      );
+    }
   }
 
   setMaxSizedBoxDebugging(config.getDebugMode());
@@ -275,16 +289,26 @@ async function validateNonInterActiveAuth(
   nonInteractiveConfig: Config,
 ) {
   // making a special case for the cli. many headless environments might not have a settings.json set
-  // so if GEMINI_API_KEY is set, we'll use that. However since the oauth things are interactive anyway, we'll
+  // so if API keys are set, we'll use those. However since the oauth things are interactive anyway, we'll
   // still expect that exists
-  if (!selectedAuthType && !process.env.GEMINI_API_KEY) {
+  if (!selectedAuthType && !process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
     console.error(
-      'Please set an Auth method in your .gemini/settings.json OR specify GEMINI_API_KEY env variable file before running',
+      'Please set an Auth method in your .gemini/settings.json OR specify GEMINI_API_KEY/ANTHROPIC_API_KEY env variable file before running',
     );
     process.exit(1);
   }
 
-  selectedAuthType = selectedAuthType || AuthType.USE_GEMINI;
+  if (!selectedAuthType) {
+    const currentModel = nonInteractiveConfig.getModel();
+    const isClaudeModel = Object.values(CLAUDE_MODELS).includes(currentModel);
+    
+    if (isClaudeModel && process.env.ANTHROPIC_API_KEY) {
+      selectedAuthType = AuthType.USE_CLAUDE;
+    } else {
+      selectedAuthType = AuthType.USE_GEMINI;
+    }
+  }
+
   const err = validateAuthMethod(selectedAuthType);
   if (err != null) {
     console.error(err);

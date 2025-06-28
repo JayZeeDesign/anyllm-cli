@@ -35,6 +35,7 @@ export function AuthDialog({
     },
     { label: 'Gemini API Key (AI Studio)', value: AuthType.USE_GEMINI },
     { label: 'Vertex AI', value: AuthType.USE_VERTEX_AI },
+    { label: 'Claude API Key (Anthropic)', value: AuthType.USE_CLAUDE },
   ];
 
   let initialAuthIndex = items.findIndex(
@@ -93,13 +94,18 @@ export function AuthDialog({
         <Text color={Colors.Gray}>(Use Enter to select)</Text>
       </Box>
       <Box marginTop={1}>
-        <Text>Terms of Services and Privacy Notice for Gemini CLI</Text>
+        <Text>Terms of Services and Privacy Notice for Multi-Model CLI</Text>
       </Box>
       <Box marginTop={1}>
         <Text color={Colors.AccentBlue}>
           {
             'https://github.com/google-gemini/gemini-cli/blob/main/docs/tos-privacy.md'
           }
+        </Text>
+      </Box>
+      <Box marginTop={1}>
+        <Text color={Colors.Gray}>
+          Claude users also subject to Anthropic Terms & Privacy Policy
         </Text>
       </Box>
     </Box>

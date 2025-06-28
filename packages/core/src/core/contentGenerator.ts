@@ -38,6 +38,7 @@ export enum AuthType {
   LOGIN_WITH_GOOGLE_PERSONAL = 'oauth-personal',
   USE_GEMINI = 'gemini-api-key',
   USE_VERTEX_AI = 'vertex-ai',
+  USE_CLAUDE = 'claude-api-key',
 }
 
 export type ContentGeneratorConfig = {
@@ -54,6 +55,7 @@ export async function createContentGeneratorConfig(
 ): Promise<ContentGeneratorConfig> {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const googleApiKey = process.env.GOOGLE_API_KEY;
+  const claudeApiKey = process.env.ANTHROPIC_API_KEY;
   const googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
   const googleCloudLocation = process.env.GOOGLE_CLOUD_LOCATION;
 
@@ -96,6 +98,12 @@ export async function createContentGeneratorConfig(
     return contentGeneratorConfig;
   }
 
+  if (authType === AuthType.USE_CLAUDE && claudeApiKey) {
+    contentGeneratorConfig.apiKey = claudeApiKey;
+    // Claude models don't need getEffectiveModel validation
+    return contentGeneratorConfig;
+  }
+
   return contentGeneratorConfig;
 }
 
@@ -123,6 +131,11 @@ export async function createContentGenerator(
     });
 
     return googleGenAI.models;
+  }
+
+  if (config.authType === AuthType.USE_CLAUDE) {
+    const { createAISDKContentGenerator } = await import('./aiSDKContentGenerator.js');
+    return createAISDKContentGenerator(config);
   }
 
   throw new Error(

@@ -35,5 +35,12 @@ export const validateAuthMethod = (authMethod: string): string | null => {
     return null;
   }
 
+  if (authMethod === AuthType.USE_CLAUDE) {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return 'ANTHROPIC_API_KEY environment variable not found. Add that to your .env and try again, no reload needed!';
+    }
+    return null;
+  }
+
   return 'Invalid auth method selected.';
 };
