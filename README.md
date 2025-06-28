@@ -19,7 +19,29 @@ npm start
 
 ## Environment Setup
 
-Create a `.env` file in the project root with your API keys:
+### Method 1: Export in Terminal (Recommended)
+
+Set your API keys directly in your terminal session:
+
+```bash
+# For Claude models (Anthropic)
+export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
+
+# For Gemini models (Google AI Studio)  
+export GEMINI_API_KEY="your-gemini-api-key-here"
+
+export GOOGLE_CLOUD_PROJECT="your-gcp-project"
+export GOOGLE_CLOUD_LOCATION="us-central1"
+
+# Verify your key is set
+echo $ANTHROPIC_API_KEY
+```
+
+> **Note**: Environment variables set with `export` only persist for your current terminal session. For permanent setup, add these commands to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) or use Method 2.
+
+### Method 2: Using .env File (Alternative)
+
+Create a `.env` file in the project root:
 
 ```env
 # For Claude models (Anthropic)
@@ -109,6 +131,22 @@ npm run typecheck
 - **Claude**: Get your API key from [Anthropic Console](https://console.anthropic.com/)
 - **Gemini**: Get your API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 - **Vertex AI**: Set up through [Google Cloud Console](https://console.cloud.google.com/)
+
+## Troubleshooting
+
+### "ANTHROPIC_API_KEY environment variable not found"
+
+1. **Check if your key is set**: `echo $ANTHROPIC_API_KEY`
+2. **If empty, export it**: `export ANTHROPIC_API_KEY="your-key-here"`
+3. **Verify it's working**: Test with `node bundle/gemini.js --model claude-3-5-sonnet-20241022 --prompt "Hello"`
+
+### "Cannot find module" errors
+
+If you see module not found errors, rebuild the project:
+```bash
+npm install
+npm run build
+```
 
 ---
 
