@@ -2,6 +2,8 @@
 
 A powerful multi-model AI CLI that supports both Gemini and Claude models with full tool integration.
 
+> **Note**: This is a fork of [Google's Gemini CLI](https://github.com/google-gemini/gemini-cli) with added Claude support and multi-model capabilities.
+
 ## Quick Start
 
 ```bash
