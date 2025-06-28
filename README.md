@@ -6,16 +6,6 @@ A powerful multi-model AI CLI that supports both Gemini and Claude models with f
 
 ## Quick Start
 
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Build the project
-npm run build
-
-# 3. Start the CLI
-npm start
-```
 
 ## Environment Setup
 
@@ -53,6 +43,18 @@ GEMINI_API_KEY=your-gemini-api-key-here
 # For Vertex AI (Google Cloud - optional)
 GOOGLE_CLOUD_PROJECT=your-gcp-project
 GOOGLE_CLOUD_LOCATION=us-central1
+```
+
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Build the project
+npm run build
+
+# 3. Start the CLI
+npm start
 ```
 
 ## Changing Models
